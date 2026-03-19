@@ -1,0 +1,50 @@
+import Icon from "@/components/ui/icon";
+import { Item } from "./types";
+
+interface ItemCardProps {
+  item: Item;
+  delay?: number;
+}
+
+export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
+  const conditionColor: Record<string, string> = {
+    Отличное: "bg-green-50 text-green-700 border-green-200",
+    Хорошее: "bg-amber-50 text-amber-700 border-amber-200",
+    Среднее: "bg-orange-50 text-orange-700 border-orange-200",
+  };
+
+  return (
+    <div
+      className="bg-white rounded-2xl border border-border overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 animate-fade-in group"
+      style={{ animationDelay: `${delay}s` }}
+    >
+      <div className="relative h-44 overflow-hidden bg-muted">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        <span className="absolute top-2 right-2 text-2xl">{item.emoji}</span>
+        <span className="absolute top-2 left-2 bg-white/90 backdrop-blur text-xs font-medium px-2 py-1 rounded-full text-foreground">
+          {item.category}
+        </span>
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-sm mb-1 truncate">{item.title}</h3>
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.description}</p>
+        <div className="flex items-center justify-between">
+          <span className={`text-xs px-2.5 py-0.5 rounded-full border ${conditionColor[item.condition] || ""}`}>
+            {item.condition}
+          </span>
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Icon name="MapPin" size={11} />
+            {item.city}
+          </span>
+        </div>
+        <button className="mt-3 w-full bg-primary text-primary-foreground py-2 rounded-full text-xs font-semibold hover:opacity-90 transition-all">
+          Хочу получить
+        </button>
+      </div>
+    </div>
+  );
+}
