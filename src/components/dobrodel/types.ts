@@ -11,6 +11,8 @@ export interface Item {
   city: string;
   image: string;
   emoji: string;
+  contact: string;
+  pickup: string;
 }
 
 export interface FormData {
@@ -36,6 +38,8 @@ export const MOCK_ITEMS: Item[] = [
     city: "Москва",
     image: "https://cdn.poehali.dev/projects/d453d69b-d504-4ac0-9cc4-be00f49186ff/files/ef483b45-5577-4ad0-aeee-f4150a2683d2.jpg",
     emoji: "📖",
+    contact: "@marina_books (Telegram)",
+    pickup: "Москва, м. Таганская — в любой будний день с 18:00 до 20:00",
   },
   {
     id: 2,
@@ -48,6 +52,8 @@ export const MOCK_ITEMS: Item[] = [
     city: "СПб",
     image: "https://cdn.poehali.dev/projects/d453d69b-d504-4ac0-9cc4-be00f49186ff/files/ef483b45-5577-4ad0-aeee-f4150a2683d2.jpg",
     emoji: "🧠",
+    contact: "+7 921 000-11-22",
+    pickup: "СПб, м. Василеостровская — выходные, договоримся по телефону",
   },
   {
     id: 3,
@@ -60,6 +66,8 @@ export const MOCK_ITEMS: Item[] = [
     city: "Казань",
     image: "https://cdn.poehali.dev/projects/d453d69b-d504-4ac0-9cc4-be00f49186ff/files/ef483b45-5577-4ad0-aeee-f4150a2683d2.jpg",
     emoji: "🧙",
+    contact: "@svetlana_kazan (Telegram)",
+    pickup: "Казань, р-н Ново-Савиновский — вечером в будни или в выходные",
   },
   {
     id: 4,
@@ -72,6 +80,8 @@ export const MOCK_ITEMS: Item[] = [
     city: "Новосибирск",
     image: "https://cdn.poehali.dev/projects/d453d69b-d504-4ac0-9cc4-be00f49186ff/files/ef483b45-5577-4ad0-aeee-f4150a2683d2.jpg",
     emoji: "🌍",
+    contact: "+7 913 555-77-88",
+    pickup: "Новосибирск, Академгородок — суббота и воскресенье с 11:00 до 16:00",
   },
   {
     id: 5,
@@ -84,6 +94,8 @@ export const MOCK_ITEMS: Item[] = [
     city: "Екатеринбург",
     image: "https://cdn.poehali.dev/projects/d453d69b-d504-4ac0-9cc4-be00f49186ff/files/ef483b45-5577-4ad0-aeee-f4150a2683d2.jpg",
     emoji: "📐",
+    contact: "@olga_ekb (Telegram)",
+    pickup: "Екатеринбург, м. Уральская — в любое удобное время, пишите заранее",
   },
   {
     id: 6,
@@ -96,6 +108,8 @@ export const MOCK_ITEMS: Item[] = [
     city: "Ростов-на-Дону",
     image: "https://cdn.poehali.dev/projects/d453d69b-d504-4ac0-9cc4-be00f49186ff/files/ef483b45-5577-4ad0-aeee-f4150a2683d2.jpg",
     emoji: "📚",
+    contact: "+7 863 100-20-30",
+    pickup: "Ростов-на-Дону, центр — будни после 19:00 или в выходные",
   },
 ];
 
