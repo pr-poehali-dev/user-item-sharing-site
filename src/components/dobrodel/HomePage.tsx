@@ -137,11 +137,25 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             Все книги <Icon name="ArrowRight" size={14} />
           </button>
         </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {MOCK_ITEMS.slice(0, 3).map((item, i) => (
-            <ItemCard key={item.id} item={item} delay={i * 0.1} />
-          ))}
-        </div>
+        {MOCK_ITEMS.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-border">
+            <div className="text-5xl mb-3">📚</div>
+            <p className="font-medium text-foreground mb-1">Пока нет объявлений</p>
+            <p className="text-sm text-muted-foreground mb-5">Станьте первым — отдайте книгу новому читателю</p>
+            <button
+              onClick={() => onNavigate("add")}
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-medium text-sm hover:opacity-90 transition-all"
+            >
+              Отдать книгу
+            </button>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {MOCK_ITEMS.slice(0, 3).map((item, i) => (
+              <ItemCard key={item.id} item={item} delay={i * 0.1} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
