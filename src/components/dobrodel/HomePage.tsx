@@ -84,7 +84,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 onClick={openAuth}
                 className="bg-white text-foreground px-8 py-3.5 rounded-full font-semibold text-base hover:bg-muted transition-all border border-border shadow-sm"
               >
-                Зарегистрироваться
+                Отдать книгу
               </button>
             )}
           </div>
