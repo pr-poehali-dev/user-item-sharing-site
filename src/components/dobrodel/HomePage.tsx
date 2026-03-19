@@ -8,13 +8,11 @@ interface HomePageProps {
 }
 
 const SLOGANS = [
-  { text: "Книга, прочитанная тобой, ждёт своего следующего читателя.", emoji: "📖" },
-  { text: "Полка освободится — чья-то жизнь изменится.", emoji: "🌱" },
-  { text: "Хорошая книга не должна пылиться на полке.", emoji: "✨" },
-  { text: "Один читатель заканчивает — другой только начинает.", emoji: "🔄" },
-  { text: "Отдать книгу — значит подарить целый мир.", emoji: "🌍" },
-  { text: "Книги созданы, чтобы путешествовать.", emoji: "✈️" },
-  { text: "Каждая книга найдёт того, кому она нужна.", emoji: "🤝" },
+  { line1: "Подари книге новую жизнь", line2: "и нового друга." },
+  { line1: "Добро начинается с буквы.", line2: "Поделись книгой." },
+  { line1: "Живи книгами.", line2: "Делись историей." },
+  { line1: "Вторая жизнь", line2: "каждой книги." },
+  { line1: "Из рук в руки,", line2: "от сердца к сердцу." },
 ];
 
 function getDailySlogan() {
@@ -39,8 +37,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <span>🤝</span> Всё бесплатно — от сердца к сердцу
           </div>
           <h1 className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4 leading-tight">
-            Отдай книги тем,<br />
-            <span className="text-primary">кто нуждается</span>
+            {slogan.line1}<br />
+            <span className="text-primary">{slogan.line2}</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto mb-8">
             Здесь люди безвозмездно передают книги тем, кому они нужны.
