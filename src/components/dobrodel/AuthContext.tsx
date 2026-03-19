@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { Item } from "./types";
 
 interface User {
   name: string;
@@ -12,6 +13,8 @@ interface AuthContextType {
   showAuthModal: boolean;
   openAuth: () => void;
   closeAuth: () => void;
+  myBooks: Item[];
+  addMyBook: (book: Item) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -19,6 +22,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [myBooks, setMyBooks] = useState<Item[]>([]);
 
   const login = (name: string, email: string) => {
     setUser({ name, email });
@@ -28,9 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => setUser(null);
   const openAuth = () => setShowAuthModal(true);
   const closeAuth = () => setShowAuthModal(false);
+  const addMyBook = (book: Item) => setMyBooks((prev) => [book, ...prev]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, showAuthModal, openAuth, closeAuth }}>
+    <AuthContext.Provider value={{ user, login, logout, showAuthModal, openAuth, closeAuth, myBooks, addMyBook }}>
       {children}
     </AuthContext.Provider>
   );
