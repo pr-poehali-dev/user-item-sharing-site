@@ -7,8 +7,24 @@ interface HomePageProps {
   onNavigate: (section: Section) => void;
 }
 
+const SLOGANS = [
+  { text: "Книга, прочитанная тобой, ждёт своего следующего читателя.", emoji: "📖" },
+  { text: "Полка освободится — чья-то жизнь изменится.", emoji: "🌱" },
+  { text: "Хорошая книга не должна пылиться на полке.", emoji: "✨" },
+  { text: "Один читатель заканчивает — другой только начинает.", emoji: "🔄" },
+  { text: "Отдать книгу — значит подарить целый мир.", emoji: "🌍" },
+  { text: "Книги созданы, чтобы путешествовать.", emoji: "✈️" },
+  { text: "Каждая книга найдёт того, кому она нужна.", emoji: "🤝" },
+];
+
+function getDailySlogan() {
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  return SLOGANS[dayOfYear % SLOGANS.length];
+}
+
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { user, openAuth } = useAuth();
+  const slogan = getDailySlogan();
 
   return (
     <div>
