@@ -1,8 +1,10 @@
-import { Section, MOCK_ITEMS, STATS } from "./types";
+import { Section, MOCK_ITEMS } from "./types";
 import ItemCard from "./ItemCard";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "./AuthContext";
 import { useState, useEffect } from "react";
+
+const STATS_URL = "https://functions.poehali.dev/d102d372-325a-495d-9304-95db825ee210";
 
 interface HomePageProps {
   onNavigate: (section: Section) => void;
@@ -21,13 +23,28 @@ function getDailySlogan() {
   return SLOGANS[dayOfYear % SLOGANS.length];
 }
 
+interface Stats {
+  given: number;
+  active: number;
+  readers: number;
+  cities: number;
+}
+
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { user, openAuth } = useAuth();
+  const [stats, setStats] = useState<Stats | null>(null);
   const [sloganIndex, setSloganIndex] = useState(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     return dayOfYear % SLOGANS.length;
   });
   const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    fetch(STATS_URL)
+      .then((r) => r.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,8 +110,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
       <section className="py-10 bg-white border-b border-border">
         <div className="max-w-5xl mx-auto px-4">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            {STATS.map((s, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            {[
+              { emoji: "📚", value: stats ? String(stats.given) : "—", label: "книг отдано" },
+              { emoji: "📖", value: stats ? String(stats.active) : "—", label: "активных" },
+              { emoji: "🤝", value: stats ? String(stats.readers) : "—", label: "читателей" },
+              { emoji: "📍", value: stats ? String(stats.cities) : "—", label: "городов" },
+            ].map((s, i) => (
               <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="text-3xl mb-1">{s.emoji}</div>
                 <div className="font-display text-3xl font-bold text-primary">{s.value}</div>
