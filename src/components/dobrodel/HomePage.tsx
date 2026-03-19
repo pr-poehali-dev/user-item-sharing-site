@@ -24,21 +24,21 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <span className="text-primary">кто нуждается</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto mb-8">
-            Здесь люди безвозмездно передают одежду, книги, игрушки и всё,
-            что может пригодиться другим.
+            Здесь люди безвозмездно передают книги тем, кому они нужны.
+            Дай книге новую жизнь — отдай её читателю.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => onNavigate("catalog")}
               className="bg-primary text-primary-foreground px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
             >
-              Найти вещи
+              Найти книгу
             </button>
             <button
               onClick={() => onNavigate("add")}
               className="bg-white text-foreground px-8 py-3.5 rounded-full font-semibold text-base hover:bg-muted transition-all border border-border shadow-sm"
             >
-              Отдать вещь
+              Отдать книгу
             </button>
           </div>
         </div>
@@ -64,8 +64,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { step: "1", icon: "📦", title: "Добавь объявление", desc: "Опиши вещь и укажи город. Это займёт 2 минуты." },
-            { step: "2", icon: "🔍", title: "Нуждающийся находит", desc: "Люди видят объявление и пишут тебе напрямую." },
+            { step: "1", icon: "📖", title: "Добавь книгу", desc: "Укажи название, автора и состояние. Это займёт 2 минуты." },
+            { step: "2", icon: "🔍", title: "Читатель находит", desc: "Люди видят объявление и пишут тебе напрямую." },
             { step: "3", icon: "🤗", title: "Передай с теплом", desc: "Договорись об удобном способе — лично или почтой." },
           ].map((item) => (
             <div key={item.step} className="bg-white rounded-2xl p-6 border border-border text-center hover:shadow-md transition-shadow">
@@ -87,7 +87,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             onClick={() => onNavigate("catalog")}
             className="text-primary text-sm font-medium hover:underline flex items-center gap-1"
           >
-            Все вещи <Icon name="ArrowRight" size={14} />
+            Все книги <Icon name="ArrowRight" size={14} />
           </button>
         </div>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
