@@ -1,5 +1,6 @@
 import Icon from "@/components/ui/icon";
 import { Section, NAV_ITEMS } from "./types";
+import { useAuth } from "./AuthContext";
 
 interface HeaderProps {
   activeSection: Section;
@@ -7,6 +8,8 @@ interface HeaderProps {
 }
 
 export default function Header({ activeSection, onNavigate }: HeaderProps) {
+  const { user, logout, openAuth } = useAuth();
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-border shadow-sm">
@@ -20,22 +23,50 @@ export default function Header({ activeSection, onNavigate }: HeaderProps) {
               <span className="text-xs text-muted-foreground">делимся с добром</span>
             </div>
           </button>
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => (
+
+          <div className="flex items-center gap-2">
+            <nav className="hidden md:flex items-center gap-1">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    activeSection === item.id
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon name={item.icon} size={15} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+
+            {user ? (
+              <div className="flex items-center gap-2 ml-2">
+                <div className="hidden md:flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
+                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {user.name[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-primary">{user.name}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted transition-all"
+                  title="Выйти"
+                >
+                  <Icon name="LogOut" size={16} />
+                </button>
+              </div>
+            ) : (
               <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeSection === item.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                }`}
+                onClick={openAuth}
+                className="ml-2 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all shadow-sm"
               >
-                <Icon name={item.icon} size={15} />
-                {item.label}
+                Войти
               </button>
-            ))}
-          </nav>
+            )}
+          </div>
         </div>
       </header>
 

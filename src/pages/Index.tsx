@@ -4,8 +4,11 @@ import Header from "@/components/dobrodel/Header";
 import HomePage from "@/components/dobrodel/HomePage";
 import ItemCard from "@/components/dobrodel/ItemCard";
 import Icon from "@/components/ui/icon";
+import { AuthProvider, useAuth } from "@/components/dobrodel/AuthContext";
+import AuthModal from "@/components/dobrodel/AuthModal";
 
-export default function Index() {
+function AppContent() {
+  const { user, openAuth } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>("home");
   const [activeCategory, setActiveCategory] = useState("Все");
   const [formData, setFormData] = useState<FormData>({
@@ -180,8 +183,11 @@ export default function Index() {
                 <p className="text-sm text-muted-foreground">Добавить фото книги</p>
                 <p className="text-xs text-muted-foreground/60 mt-1">до 5 фотографий</p>
               </div>
-              <button className="w-full bg-primary text-primary-foreground py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                Опубликовать объявление 📚
+              <button
+                onClick={() => { if (!user) { openAuth(); } }}
+                className="w-full bg-primary text-primary-foreground py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              >
+                {user ? "Опубликовать объявление 📚" : "Войдите, чтобы опубликовать"}
               </button>
             </div>
           </div>
@@ -198,11 +204,18 @@ export default function Index() {
               <div className="w-20 h-20 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full flex items-center justify-center text-4xl mx-auto mb-3">
                 📚
               </div>
-              <h2 className="font-semibold text-lg">Гость</h2>
-              <p className="text-sm text-muted-foreground mb-4">Войдите, чтобы управлять объявлениями</p>
-              <button className="bg-primary text-primary-foreground px-8 py-2.5 rounded-full font-medium text-sm hover:opacity-90 transition-all">
-                Войти или зарегистрироваться
-              </button>
+              <h2 className="font-semibold text-lg">{user ? user.name : "Гость"}</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                {user ? user.email : "Войдите, чтобы управлять объявлениями"}
+              </p>
+              {!user && (
+                <button
+                  onClick={openAuth}
+                  className="bg-primary text-primary-foreground px-8 py-2.5 rounded-full font-medium text-sm hover:opacity-90 transition-all"
+                >
+                  Войти или зарегистрироваться
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
@@ -245,6 +258,16 @@ export default function Index() {
         <p className="font-display text-lg text-foreground font-semibold">Добродел</p>
         <p className="text-xs text-muted-foreground mt-1">Книги находят новых читателей</p>
       </footer>
+
+      <AuthModal />
     </div>
+  );
+}
+
+export default function Index() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

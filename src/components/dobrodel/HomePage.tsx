@@ -1,12 +1,15 @@
 import { Section, MOCK_ITEMS, STATS } from "./types";
 import ItemCard from "./ItemCard";
 import Icon from "@/components/ui/icon";
+import { useAuth } from "./AuthContext";
 
 interface HomePageProps {
   onNavigate: (section: Section) => void;
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
+  const { user, openAuth } = useAuth();
+
   return (
     <div>
       <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-green-50 py-16 md:py-24">
@@ -34,12 +37,21 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             >
               Найти книгу
             </button>
-            <button
-              onClick={() => onNavigate("add")}
-              className="bg-white text-foreground px-8 py-3.5 rounded-full font-semibold text-base hover:bg-muted transition-all border border-border shadow-sm"
-            >
-              Отдать книгу
-            </button>
+            {user ? (
+              <button
+                onClick={() => onNavigate("add")}
+                className="bg-white text-foreground px-8 py-3.5 rounded-full font-semibold text-base hover:bg-muted transition-all border border-border shadow-sm"
+              >
+                Отдать книгу
+              </button>
+            ) : (
+              <button
+                onClick={openAuth}
+                className="bg-white text-foreground px-8 py-3.5 rounded-full font-semibold text-base hover:bg-muted transition-all border border-border shadow-sm"
+              >
+                Зарегистрироваться
+              </button>
+            )}
           </div>
         </div>
       </section>

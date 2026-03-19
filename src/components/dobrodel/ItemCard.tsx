@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Item } from "./types";
+import { useAuth } from "./AuthContext";
 
 interface ItemCardProps {
   item: Item;
@@ -8,7 +9,13 @@ interface ItemCardProps {
 }
 
 export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
+  const { user, openAuth } = useAuth();
   const [showContact, setShowContact] = useState(false);
+
+  const handleWant = () => {
+    if (!user) openAuth();
+    else setShowContact(true);
+  };
 
   const conditionColor: Record<string, string> = {
     Отличное: "bg-green-50 text-green-700 border-green-200",
@@ -46,10 +53,10 @@ export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
             </span>
           </div>
           <button
-            onClick={() => setShowContact(true)}
+            onClick={handleWant}
             className="mt-3 w-full bg-primary text-primary-foreground py-2 rounded-full text-xs font-semibold hover:opacity-90 transition-all"
           >
-            Хочу получить
+            {user ? "Хочу получить" : "Войдите, чтобы получить"}
           </button>
         </div>
       </div>
