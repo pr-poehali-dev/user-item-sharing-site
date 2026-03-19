@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "Get books list",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create book",
+      "method": "POST",
+      "path": "/",
+      "body": {"title": "Тест", "category": "Художественная", "condition": "Хорошее", "author_name": "Юра", "city": "Москва", "contact": "@test", "pickup": "Центр", "emoji": "📚"},
+      "expectedStatus": 201,
+      "expectedBody": {"id": 1},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

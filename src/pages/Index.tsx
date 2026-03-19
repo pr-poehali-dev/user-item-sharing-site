@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Section, MOCK_ITEMS, CATEGORIES, STATS, NAV_ITEMS, FormData, Item } from "@/components/dobrodel/types";
+import { useState, useEffect, useCallback } from "react";
+import { Section, CATEGORIES, NAV_ITEMS, FormData, Item } from "@/components/dobrodel/types";
 import Header from "@/components/dobrodel/Header";
 import HomePage from "@/components/dobrodel/HomePage";
 import ItemCard from "@/components/dobrodel/ItemCard";
@@ -7,11 +7,33 @@ import Icon from "@/components/ui/icon";
 import { AuthProvider, useAuth } from "@/components/dobrodel/AuthContext";
 import AuthModal from "@/components/dobrodel/AuthModal";
 
+const BOOKS_URL = "https://functions.poehali.dev/b3760fda-9d1b-466c-be33-dae1c5039801";
+
+function dbBookToItem(b: Record<string, string | number>): Item {
+  return {
+    id: Number(b.id),
+    title: String(b.title),
+    category: String(b.category),
+    size: String(b.author_name || ""),
+    condition: String(b.condition),
+    description: String(b.description || ""),
+    author: String(b.author_name || ""),
+    city: String(b.city || ""),
+    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
+    emoji: String(b.emoji || "📚"),
+    contact: String(b.contact || ""),
+    pickup: String(b.pickup || ""),
+  };
+}
+
 function AppContent() {
   const { user, openAuth, myBooks, addMyBook } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>("home");
   const [profileTab, setProfileTab] = useState<"menu" | "mybooks">("menu");
   const [activeCategory, setActiveCategory] = useState("Все");
+  const [books, setBooks] = useState<Item[]>([]);
+  const [loadingBooks, setLoadingBooks] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: "",
     category: "Художественная",
@@ -23,10 +45,65 @@ function AppContent() {
     phone: "",
   });
 
-  const filteredItems =
-    activeCategory === "Все"
-      ? MOCK_ITEMS
-      : MOCK_ITEMS.filter((i) => i.category === activeCategory);
+  const fetchBooks = useCallback(() => {
+    setLoadingBooks(true);
+    const url = activeCategory !== "Все"
+      ? `${BOOKS_URL}?category=${encodeURIComponent(activeCategory)}`
+      : BOOKS_URL;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => setBooks(Array.isArray(data) ? data.map(dbBookToItem) : []))
+      .catch(() => setBooks([]))
+      .finally(() => setLoadingBooks(false));
+  }, [activeCategory]);
+
+  useEffect(() => {
+    if (activeSection === "catalog") fetchBooks();
+  }, [activeSection, fetchBooks]);
+
+  const handlePublish = async () => {
+    if (!user) { openAuth(); return; }
+    if (!formData.title) return;
+    setPublishing(true);
+    try {
+      const res = await fetch(BOOKS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          category: formData.category,
+          condition: formData.condition,
+          description: formData.description,
+          author_name: formData.name || user.name,
+          city: formData.city,
+          contact: formData.phone || user.email,
+          pickup: formData.city || "Уточните при контакте",
+          emoji: "📚",
+        }),
+      });
+      const data = await res.json();
+      const newBook: Item = {
+        id: data.id || Date.now(),
+        title: formData.title,
+        category: formData.category,
+        size: formData.size,
+        condition: formData.condition,
+        description: formData.description || "Без описания",
+        author: formData.name || user.name,
+        city: formData.city || "Не указан",
+        image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
+        emoji: "📚",
+        contact: formData.phone || user.email,
+        pickup: formData.city || "Уточните при контакте",
+      };
+      addMyBook(newBook);
+      setFormData({ title: "", category: "Художественная", size: "", condition: "Хорошее", description: "", city: "", name: "", phone: "" });
+      setActiveSection("profile");
+      setProfileTab("mybooks");
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background font-body flex flex-col">
@@ -69,12 +146,18 @@ function AppContent() {
                 ))}
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {filteredItems.map((item, i) => (
-                <ItemCard key={item.id} item={item} delay={i * 0.05} />
-              ))}
-            </div>
-            {filteredItems.length === 0 && (
+            {loadingBooks ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <div className="text-4xl mb-3 animate-pulse">📚</div>
+                <p>Загружаю книги...</p>
+              </div>
+            ) : books.length > 0 ? (
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {books.map((item, i) => (
+                  <ItemCard key={item.id} item={item} delay={i * 0.05} />
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-16 text-muted-foreground">
                 <div className="text-5xl mb-3">🔍</div>
                 <p>В этой категории пока нет книг</p>
@@ -185,31 +268,11 @@ function AppContent() {
                 <p className="text-xs text-muted-foreground/60 mt-1">до 5 фотографий</p>
               </div>
               <button
-                onClick={() => {
-                  if (!user) { openAuth(); return; }
-                  if (!formData.title) return;
-                  const newBook: Item = {
-                    id: Date.now(),
-                    title: formData.title,
-                    category: formData.category,
-                    size: formData.size,
-                    condition: formData.condition,
-                    description: formData.description || "Без описания",
-                    author: formData.name || user.name,
-                    city: formData.city || "Не указан",
-                    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
-                    emoji: "📚",
-                    contact: formData.phone || user.email,
-                    pickup: formData.city || "Уточните при контакте",
-                  };
-                  addMyBook(newBook);
-                  setFormData({ title: "", category: "Художественная", size: "", condition: "Хорошее", description: "", city: "", name: "", phone: "" });
-                  setActiveSection("profile");
-                  setProfileTab("mybooks");
-                }}
-                className="w-full bg-primary text-primary-foreground py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                onClick={handlePublish}
+                disabled={publishing}
+                className="w-full bg-primary text-primary-foreground py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {user ? "Опубликовать объявление 📚" : "Войдите, чтобы опубликовать"}
+                {publishing ? "Публикую..." : user ? "Опубликовать объявление 📚" : "Войдите, чтобы опубликовать"}
               </button>
             </div>
           </div>
