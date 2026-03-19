@@ -20,7 +20,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <span>🤝</span> Всё бесплатно — от сердца к сердцу
           </div>
           <h1 className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4 leading-tight">
-            Отдай вещи тем,<br />
+            Отдай книги тем,<br />
             <span className="text-primary">кто нуждается</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto mb-8">
