@@ -2,6 +2,7 @@ import { Section, MOCK_ITEMS, STATS } from "./types";
 import ItemCard from "./ItemCard";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "./AuthContext";
+import { useState, useEffect } from "react";
 
 interface HomePageProps {
   onNavigate: (section: Section) => void;
@@ -22,7 +23,24 @@ function getDailySlogan() {
 
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { user, openAuth } = useAuth();
-  const slogan = getDailySlogan();
+  const [sloganIndex, setSloganIndex] = useState(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    return dayOfYear % SLOGANS.length;
+  });
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setSloganIndex((i) => (i + 1) % SLOGANS.length);
+        setVisible(true);
+      }, 400);
+    }, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const slogan = SLOGANS[sloganIndex];
 
   return (
     <div>
@@ -36,7 +54,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur px-4 py-1.5 rounded-full text-sm text-primary font-medium mb-6 border border-primary/20">
             <span>🤝</span> Всё бесплатно — от сердца к сердцу
           </div>
-          <h1 className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4 leading-tight">
+          <h1
+            className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4 leading-tight transition-opacity duration-400"
+            style={{ opacity: visible ? 1 : 0 }}
+          >
             {slogan.line1}<br />
             <span className="text-primary">{slogan.line2}</span>
           </h1>
