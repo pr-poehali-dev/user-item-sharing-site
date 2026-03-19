@@ -124,7 +124,7 @@ export default function Index() {
             <span className="text-3xl">🌿</span>
             <div>
               <span className="font-display text-2xl font-bold text-primary leading-none block">
-                Добросклад
+                Добродел
               </span>
               <span className="text-xs text-muted-foreground">делимся с добром</span>
             </div>
@@ -459,7 +459,7 @@ export default function Index() {
 
       <footer className="bg-white border-t border-border py-8 text-center mb-16 md:mb-0">
         <div className="text-2xl mb-2">🌿</div>
-        <p className="font-display text-lg text-foreground font-semibold">Добросклад</p>
+        <p className="font-display text-lg text-foreground font-semibold">Добродел</p>
         <p className="text-xs text-muted-foreground mt-1">Делимся добром — вещи находят новый дом</p>
       </footer>
     </div>
