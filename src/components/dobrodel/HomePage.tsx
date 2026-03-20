@@ -52,8 +52,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       setTimeout(() => {
         setSloganIndex((i) => (i + 1) % SLOGANS.length);
         setVisible(true);
-      }, 400);
-    }, 20000);
+      }, 600);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -72,8 +72,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <span>🤝</span> Всё бесплатно — от сердца к сердцу
           </div>
           <h1
-            className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4 leading-tight transition-opacity duration-400"
-            style={{ opacity: visible ? 1 : 0 }}
+            className="font-display text-5xl md:text-7xl font-bold text-foreground mb-4 leading-tight"
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.6s ease, transform 0.6s ease",
+            }}
           >
             {slogan.line1}<br />
             <span className="text-primary">{slogan.line2}</span>
