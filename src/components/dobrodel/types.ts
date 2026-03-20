@@ -13,6 +13,17 @@ export interface Item {
   emoji: string;
   contact: string;
   pickup: string;
+  ownerEmail?: string;
+}
+
+export interface BookRequest {
+  id: number;
+  book_id: number;
+  book_title: string;
+  requester_email: string;
+  requester_name: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface FormData {

@@ -19,8 +19,8 @@ def handler(event: dict, context) -> dict:
     if event.get('httpMethod') == 'POST':
         body = json.loads(event.get('body') or '{}')
         cur.execute(
-            """INSERT INTO books (title, category, condition, description, author_name, city, contact, pickup, emoji)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, created_at""",
+            """INSERT INTO books (title, category, condition, description, author_name, city, contact, pickup, emoji, owner_email)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, created_at""",
             (
                 body.get('title', ''),
                 body.get('category', 'Художественная'),
@@ -31,6 +31,7 @@ def handler(event: dict, context) -> dict:
                 body.get('contact', ''),
                 body.get('pickup', ''),
                 body.get('emoji', '📚'),
+                body.get('owner_email', ''),
             )
         )
         row = cur.fetchone()
@@ -47,15 +48,15 @@ def handler(event: dict, context) -> dict:
     category = (event.get('queryStringParameters') or {}).get('category')
     if category and category != 'Все':
         cur.execute(
-            "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at FROM books WHERE is_given = FALSE AND category = %s ORDER BY created_at DESC",
+            "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at, owner_email FROM books WHERE is_given = FALSE AND category = %s ORDER BY created_at DESC",
             (category,)
         )
     else:
         cur.execute(
-            "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at FROM books WHERE is_given = FALSE ORDER BY created_at DESC"
+            "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at, owner_email FROM books WHERE is_given = FALSE ORDER BY created_at DESC"
         )
 
-    cols = ['id', 'title', 'category', 'condition', 'description', 'author_name', 'city', 'contact', 'pickup', 'emoji', 'created_at']
+    cols = ['id', 'title', 'category', 'condition', 'description', 'author_name', 'city', 'contact', 'pickup', 'emoji', 'created_at', 'owner_email']
     books = [dict(zip(cols, row)) for row in cur.fetchall()]
     for b in books:
         b['created_at'] = str(b['created_at'])

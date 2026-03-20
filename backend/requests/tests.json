@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET без owner_email — ошибка",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {"error": "owner_email required"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET уведомления для несуществующего владельца",
+      "method": "GET",
+      "path": "/?owner_email=nobody@test.com",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "exact"
+    }
+  ]
+}

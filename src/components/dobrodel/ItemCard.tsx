@@ -3,6 +3,8 @@ import Icon from "@/components/ui/icon";
 import { Item } from "./types";
 import { useAuth } from "./AuthContext";
 
+const REQUESTS_URL = "https://functions.poehali.dev/cbb98ecc-463c-43c3-b6a9-e85a6decfc07";
+
 interface ItemCardProps {
   item: Item;
   delay?: number;
@@ -11,10 +13,25 @@ interface ItemCardProps {
 export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
   const { user, openAuth } = useAuth();
   const [showContact, setShowContact] = useState(false);
+  const [requested, setRequested] = useState(false);
 
-  const handleWant = () => {
-    if (!user) openAuth();
-    else setShowContact(true);
+  const handleWant = async () => {
+    if (!user) { openAuth(); return; }
+    setShowContact(true);
+    if (!requested && item.ownerEmail && item.ownerEmail !== user.email) {
+      setRequested(true);
+      fetch(REQUESTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          book_id: item.id,
+          book_title: item.title,
+          requester_email: user.email,
+          requester_name: user.name,
+          owner_email: item.ownerEmail,
+        }),
+      }).catch(() => {});
+    }
   };
 
   const conditionColor: Record<string, string> = {

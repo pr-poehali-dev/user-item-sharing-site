@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Section, CATEGORIES, NAV_ITEMS, FormData, Item } from "@/components/dobrodel/types";
+import { Section, CATEGORIES, NAV_ITEMS, FormData, Item, BookRequest } from "@/components/dobrodel/types";
 import Header from "@/components/dobrodel/Header";
 import HomePage from "@/components/dobrodel/HomePage";
 import ItemCard from "@/components/dobrodel/ItemCard";
@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/components/dobrodel/AuthContext";
 import AuthModal from "@/components/dobrodel/AuthModal";
 
 const BOOKS_URL = "https://functions.poehali.dev/b3760fda-9d1b-466c-be33-dae1c5039801";
+const REQUESTS_URL = "https://functions.poehali.dev/cbb98ecc-463c-43c3-b6a9-e85a6decfc07";
 
 function dbBookToItem(b: Record<string, string | number>): Item {
   return {
@@ -23,13 +24,17 @@ function dbBookToItem(b: Record<string, string | number>): Item {
     emoji: String(b.emoji || "📚"),
     contact: String(b.contact || ""),
     pickup: String(b.pickup || ""),
+    ownerEmail: String(b.owner_email || ""),
   };
 }
 
 function AppContent() {
   const { user, openAuth, myBooks, addMyBook } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>("home");
-  const [profileTab, setProfileTab] = useState<"menu" | "mybooks">("menu");
+  const [profileTab, setProfileTab] = useState<"menu" | "mybooks" | "messages">("menu");
+  const [notifications, setNotifications] = useState<BookRequest[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [activeCategory, setActiveCategory] = useState("Все");
   const [books, setBooks] = useState<Item[]>([]);
   const [loadingBooks, setLoadingBooks] = useState(false);
@@ -61,6 +66,32 @@ function AppContent() {
     if (activeSection === "catalog") fetchBooks();
   }, [activeSection, fetchBooks]);
 
+  const fetchNotifications = useCallback(() => {
+    if (!user) return;
+    setLoadingNotifications(true);
+    fetch(`${REQUESTS_URL}?owner_email=${encodeURIComponent(user.email)}`)
+      .then((r) => r.json())
+      .then((data: BookRequest[]) => {
+        setNotifications(Array.isArray(data) ? data : []);
+      })
+      .catch(() => setNotifications([]))
+      .finally(() => setLoadingNotifications(false));
+  }, [user]);
+
+  // Проверяем непрочитанные уведомления при открытии профиля
+  useEffect(() => {
+    if (activeSection === "profile" && user) {
+      fetch(`${REQUESTS_URL}?owner_email=${encodeURIComponent(user.email)}&count_only=1`)
+        .then((r) => r.json())
+        .then((data: BookRequest[]) => {
+          if (Array.isArray(data)) {
+            setUnreadCount(data.filter((n) => !n.is_read).length);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeSection, user]);
+
   const handlePublish = async () => {
     if (!user) { openAuth(); return; }
     if (!formData.title) return;
@@ -79,6 +110,7 @@ function AppContent() {
           contact: formData.phone || user.email,
           pickup: formData.city || "Уточните при контакте",
           emoji: "📚",
+          owner_email: user.email,
         }),
       });
       const data = await res.json();
@@ -333,9 +365,23 @@ function AppContent() {
                     </div>
                     <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
                   </button>
+                  <button
+                    onClick={() => { setProfileTab("messages"); fetchNotifications(); setUnreadCount(0); }}
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors border-b border-border text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon name="MessageCircle" size={18} className="text-primary" />
+                      <span className="text-sm font-medium">Сообщения</span>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
+                  </button>
                   {[
                     { icon: "Heart", label: "Избранное" },
-                    { icon: "MessageCircle", label: "Сообщения" },
                     { icon: "Settings", label: "Настройки" },
                   ].map((item, i) => (
                     <button
@@ -383,6 +429,57 @@ function AppContent() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     {myBooks.map((book, i) => (
                       <ItemCard key={book.id} item={book} delay={i * 0.05} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {profileTab === "messages" && (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <button
+                    onClick={() => setProfileTab("menu")}
+                    className="p-2 rounded-full hover:bg-muted transition-colors"
+                  >
+                    <Icon name="ArrowLeft" size={20} className="text-foreground" />
+                  </button>
+                  <div>
+                    <h1 className="font-display text-3xl font-bold text-foreground">Сообщения</h1>
+                    <p className="text-muted-foreground text-sm">Кто хочет забрать ваши книги</p>
+                  </div>
+                </div>
+                {loadingNotifications ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <div className="text-4xl mb-3 animate-pulse">💬</div>
+                    <p>Загружаю...</p>
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="text-5xl mb-3">💬</div>
+                    <p className="font-medium text-foreground mb-1">Пока нет запросов</p>
+                    <p className="text-sm text-muted-foreground">Когда кто-то захочет забрать вашу книгу — вы увидите это здесь</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {notifications.map((n) => (
+                      <div key={n.id} className="bg-white rounded-2xl border border-border p-4 shadow-sm">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full flex items-center justify-center text-lg flex-shrink-0">
+                            📚
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground">{n.requester_name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Хочет забрать: <span className="text-foreground font-medium">{n.book_title}</span>
+                            </p>
+                            <p className="text-xs text-primary mt-1">{n.requester_email}</p>
+                          </div>
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                            {new Date(n.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+                          </span>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
