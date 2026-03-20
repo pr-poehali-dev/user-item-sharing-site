@@ -116,10 +116,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             {[
-              { emoji: "📚", value: stats ? String(stats.given) : "—", label: "книг отдано" },
-              { emoji: "📖", value: stats ? String(stats.active) : "—", label: "активных" },
-              { emoji: "🤝", value: stats ? String(stats.readers) : "—", label: "читателей" },
-              { emoji: "📍", value: stats ? String(stats.cities) : "—", label: "городов" },
+              { emoji: "📚", value: stats ? String(stats.given) : "0", label: "книг отдано" },
+              { emoji: "📖", value: stats ? String(stats.active) : "0", label: "активных" },
+              { emoji: "🤝", value: stats ? String(stats.readers) : "0", label: "читателей" },
+              { emoji: "📍", value: stats ? String(stats.cities) : "0", label: "городов" },
             ].map((s, i) => (
               <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="text-3xl mb-1">{s.emoji}</div>
