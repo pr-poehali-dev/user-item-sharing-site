@@ -53,7 +53,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         setSloganIndex((i) => (i + 1) % SLOGANS.length);
         setVisible(true);
       }, 600);
-    }, 4000);
+    }, 12000);
     return () => clearInterval(interval);
   }, []);
 
