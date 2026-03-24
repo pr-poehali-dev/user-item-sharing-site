@@ -6,7 +6,7 @@ import { useAuth } from "@/components/dobrodel/AuthContext";
 
 const REQUESTS_URL = "https://functions.poehali.dev/cbb98ecc-463c-43c3-b6a9-e85a6decfc07";
 
-type ProfileTab = "menu" | "mybooks" | "messages" | "favorites";
+type ProfileTab = "menu" | "mybooks" | "messages" | "favorites" | "settings";
 
 interface ProfileSectionProps {
   setActiveSection: (section: Section) => void;
@@ -14,7 +14,7 @@ interface ProfileSectionProps {
 }
 
 export default function ProfileSection({ setActiveSection, initialTab = "menu" }: ProfileSectionProps) {
-  const { user, openAuth, myBooks, favorites } = useAuth();
+  const { user, openAuth, logout, myBooks, favorites } = useAuth();
   const [profileTab, setProfileTab] = useState<ProfileTab>(initialTab);
   const [notifications, setNotifications] = useState<BookRequest[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -130,6 +130,7 @@ export default function ProfileSection({ setActiveSection, initialTab = "menu" }
               <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
             </button>
             <button
+              onClick={() => setProfileTab("settings")}
               className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
@@ -262,6 +263,71 @@ export default function ProfileSection({ setActiveSection, initialTab = "menu" }
               ))}
             </div>
           )}
+        </>
+      )}
+
+      {profileTab === "settings" && (
+        <>
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setProfileTab("menu")}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              <Icon name="ArrowLeft" size={20} className="text-foreground" />
+            </button>
+            <div>
+              <h1 className="font-display text-3xl font-bold text-foreground">Настройки</h1>
+              <p className="text-muted-foreground text-sm">Управление аккаунтом</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-border p-6 mb-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
+                📚
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{user?.name}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm mb-4">
+            <div className="px-5 py-3 border-b border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Аккаунт</p>
+            </div>
+            <div className="px-5 py-4 flex items-center justify-between border-b border-border">
+              <div className="flex items-center gap-3">
+                <Icon name="User" size={18} className="text-muted-foreground" />
+                <span className="text-sm text-foreground">Имя</span>
+              </div>
+              <span className="text-sm text-muted-foreground">{user?.name}</span>
+            </div>
+            <div className="px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Icon name="Mail" size={18} className="text-muted-foreground" />
+                <span className="text-sm text-foreground">Email</span>
+              </div>
+              <span className="text-sm text-muted-foreground">{user?.email}</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+            <div className="px-5 py-3 border-b border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Другое</p>
+            </div>
+            <button
+              onClick={() => {
+                logout();
+                setActiveSection("home");
+              }}
+              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-red-50 transition-colors text-left"
+            >
+              <Icon name="LogOut" size={18} className="text-red-500" />
+              <span className="text-sm font-medium text-red-500">Выйти из аккаунта</span>
+            </button>
+          </div>
         </>
       )}
     </div>
