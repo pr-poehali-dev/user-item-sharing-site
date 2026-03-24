@@ -11,9 +11,17 @@ interface ItemCardProps {
 }
 
 export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
-  const { user, openAuth } = useAuth();
+  const { user, openAuth, toggleFavorite, isFavorite } = useAuth();
   const [showContact, setShowContact] = useState(false);
   const [requested, setRequested] = useState(false);
+
+  const favorited = isFavorite(item.id);
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) { openAuth(); return; }
+    toggleFavorite(item);
+  };
 
   const handleWant = async () => {
     if (!user) { openAuth(); return; }
@@ -56,6 +64,16 @@ export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
           <span className="absolute top-2 left-2 bg-white/90 backdrop-blur text-xs font-medium px-2 py-1 rounded-full text-foreground">
             {item.category}
           </span>
+          <button
+            onClick={handleFavorite}
+            className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${
+              favorited
+                ? "bg-red-500 text-white scale-110"
+                : "bg-white/90 backdrop-blur text-muted-foreground hover:text-red-500 hover:scale-110"
+            }`}
+          >
+            <Icon name="Heart" size={15} className={favorited ? "fill-white" : ""} />
+          </button>
         </div>
         <div className="p-4">
           <h3 className="font-semibold text-sm mb-1 truncate">{item.title}</h3>

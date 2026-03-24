@@ -29,9 +29,9 @@ function dbBookToItem(b: Record<string, string | number>): Item {
 }
 
 function AppContent() {
-  const { user, openAuth, myBooks, addMyBook } = useAuth();
+  const { user, openAuth, myBooks, addMyBook, favorites } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>("home");
-  const [profileTab, setProfileTab] = useState<"menu" | "mybooks" | "messages">("menu");
+  const [profileTab, setProfileTab] = useState<"menu" | "mybooks" | "messages" | "favorites">("menu");
   const [notifications, setNotifications] = useState<BookRequest[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
@@ -380,21 +380,30 @@ function AppContent() {
                     </div>
                     <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
                   </button>
-                  {[
-                    { icon: "Heart", label: "Избранное" },
-                    { icon: "Settings", label: "Настройки" },
-                  ].map((item, i) => (
-                    <button
-                      key={i}
-                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors border-b border-border last:border-0 text-left"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon name={item.icon} size={18} className="text-primary" />
-                        <span className="text-sm font-medium">{item.label}</span>
-                      </div>
-                      <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setProfileTab("favorites")}
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors border-b border-border text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon name="Heart" size={18} className="text-primary" />
+                      <span className="text-sm font-medium">Избранное</span>
+                      {favorites.length > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                          {favorites.length}
+                        </span>
+                      )}
+                    </div>
+                    <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
+                  </button>
+                  <button
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon name="Settings" size={18} className="text-primary" />
+                      <span className="text-sm font-medium">Настройки</span>
+                    </div>
+                    <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
+                  </button>
                 </div>
               </>
             )}
@@ -480,6 +489,42 @@ function AppContent() {
                           </span>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {profileTab === "favorites" && (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <button
+                    onClick={() => setProfileTab("menu")}
+                    className="p-2 rounded-full hover:bg-muted transition-colors"
+                  >
+                    <Icon name="ArrowLeft" size={20} className="text-foreground" />
+                  </button>
+                  <div>
+                    <h1 className="font-display text-3xl font-bold text-foreground">Избранное</h1>
+                    <p className="text-muted-foreground text-sm">Книги, которые вас заинтересовали</p>
+                  </div>
+                </div>
+                {favorites.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="text-5xl mb-3">🤍</div>
+                    <p className="font-medium text-foreground mb-1">Пока ничего нет</p>
+                    <p className="text-sm text-muted-foreground mb-6">Нажмите ❤️ на карточке книги, чтобы сохранить её сюда</p>
+                    <button
+                      onClick={() => { setProfileTab("menu"); setActiveSection("catalog"); }}
+                      className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-medium text-sm hover:opacity-90 transition-all"
+                    >
+                      Перейти в каталог
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {favorites.map((book, i) => (
+                      <ItemCard key={book.id} item={book} delay={i * 0.05} />
                     ))}
                   </div>
                 )}

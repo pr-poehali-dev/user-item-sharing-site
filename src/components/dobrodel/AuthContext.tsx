@@ -15,6 +15,9 @@ interface AuthContextType {
   closeAuth: () => void;
   myBooks: Item[];
   addMyBook: (book: Item) => void;
+  favorites: Item[];
+  toggleFavorite: (item: Item) => void;
+  isFavorite: (id: number) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -23,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [myBooks, setMyBooks] = useState<Item[]>([]);
+  const [favorites, setFavorites] = useState<Item[]>([]);
 
   const login = (name: string, email: string) => {
     setUser({ name, email });
@@ -34,8 +38,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const closeAuth = () => setShowAuthModal(false);
   const addMyBook = (book: Item) => setMyBooks((prev) => [book, ...prev]);
 
+  const toggleFavorite = (item: Item) => {
+    setFavorites((prev) =>
+      prev.some((f) => f.id === item.id)
+        ? prev.filter((f) => f.id !== item.id)
+        : [item, ...prev]
+    );
+  };
+
+  const isFavorite = (id: number) => favorites.some((f) => f.id === id);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, showAuthModal, openAuth, closeAuth, myBooks, addMyBook }}>
+    <AuthContext.Provider value={{ user, login, logout, showAuthModal, openAuth, closeAuth, myBooks, addMyBook, favorites, toggleFavorite, isFavorite }}>
       {children}
     </AuthContext.Provider>
   );
