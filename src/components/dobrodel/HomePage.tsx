@@ -1,10 +1,29 @@
-import { Section, MOCK_ITEMS } from "./types";
+import { Section, Item } from "./types";
 import ItemCard from "./ItemCard";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "./AuthContext";
 import { useState, useEffect } from "react";
 
 const STATS_URL = "https://functions.poehali.dev/d102d372-325a-495d-9304-95db825ee210";
+const BOOKS_URL = "https://functions.poehali.dev/b3760fda-9d1b-466c-be33-dae1c5039801";
+
+function dbBookToItem(b: Record<string, string | number>): Item {
+  return {
+    id: Number(b.id),
+    title: String(b.title),
+    category: String(b.category),
+    size: String(b.author_name || ""),
+    condition: String(b.condition),
+    description: String(b.description || ""),
+    author: String(b.author_name || ""),
+    city: String(b.city || ""),
+    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
+    emoji: String(b.emoji || "📚"),
+    contact: String(b.contact || ""),
+    pickup: String(b.pickup || ""),
+    ownerEmail: String(b.owner_email || ""),
+  };
+}
 
 interface HomePageProps {
   onNavigate: (section: Section) => void;
@@ -33,6 +52,7 @@ interface Stats {
 export default function HomePage({ onNavigate }: HomePageProps) {
   const { user, openAuth } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [freshBooks, setFreshBooks] = useState<Item[]>([]);
   const [sloganIndex, setSloganIndex] = useState(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     return dayOfYear % SLOGANS.length;
@@ -43,6 +63,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     fetch(STATS_URL)
       .then((r) => r.json())
       .then((data) => setStats(data))
+      .catch(() => {});
+    fetch(BOOKS_URL)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setFreshBooks(data.map(dbBookToItem));
+      })
       .catch(() => {});
   }, []);
 
@@ -163,7 +189,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             Все книги <Icon name="ArrowRight" size={14} />
           </button>
         </div>
-        {MOCK_ITEMS.length === 0 ? (
+        {freshBooks.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-border">
             <div className="text-5xl mb-3">📚</div>
             <p className="font-medium text-foreground mb-1">Пока нет объявлений</p>
@@ -177,7 +203,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {MOCK_ITEMS.slice(0, 3).map((item, i) => (
+            {freshBooks.map((item, i) => (
               <ItemCard key={item.id} item={item} delay={i * 0.1} />
             ))}
           </div>
