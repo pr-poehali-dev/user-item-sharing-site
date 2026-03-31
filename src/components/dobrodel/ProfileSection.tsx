@@ -3,7 +3,7 @@ import { BookRequest, Item, Section } from "@/components/dobrodel/types";
 import ItemCard from "@/components/dobrodel/ItemCard";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/components/dobrodel/AuthContext";
-import func2url from "@/../func2url.json";
+import func2url from "@/../backend/func2url.json";
 
 const REQUESTS_URL = "https://functions.poehali.dev/cbb98ecc-463c-43c3-b6a9-e85a6decfc07";
 const BOOKS_URL = (func2url as Record<string, string>)["books"];

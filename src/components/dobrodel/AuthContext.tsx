@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { Item } from "./types";
-import func2url from "@/../func2url.json";
+import func2url from "@/../backend/func2url.json";
 
 const BOOKS_URL = (func2url as Record<string, string>)["books"];
 
