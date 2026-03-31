@@ -4,17 +4,34 @@ import psycopg2
 
 CORS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 }
 
 def handler(event: dict, context) -> dict:
-    """CRUD для книг: GET — список, POST — создать."""
+    """CRUD для книг: GET — список или мои объявления, POST — создать, DELETE — удалить своё."""
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': {**CORS, 'Access-Control-Max-Age': '86400'}, 'body': ''}
 
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     cur = conn.cursor()
+
+    if event.get('httpMethod') == 'DELETE':
+        params = event.get('queryStringParameters') or {}
+        book_id = params.get('id')
+        owner_email = params.get('owner_email')
+        if not book_id or not owner_email:
+            cur.close()
+            conn.close()
+            return {'statusCode': 400, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'id and owner_email required'})}
+        cur.execute("DELETE FROM books WHERE id = %s AND owner_email = %s RETURNING id", (book_id, owner_email))
+        deleted = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        if deleted:
+            return {'statusCode': 200, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'deleted': deleted[0]})}
+        return {'statusCode': 404, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'not found'})}
 
     if event.get('httpMethod') == 'POST':
         body = json.loads(event.get('body') or '{}')
@@ -44,9 +61,19 @@ def handler(event: dict, context) -> dict:
             'body': json.dumps({'id': row[0], 'created_at': str(row[1])})
         }
 
-    # GET — список книг
-    category = (event.get('queryStringParameters') or {}).get('category')
-    if category and category != 'Все':
+    # GET — список книг или мои объявления
+    params = event.get('queryStringParameters') or {}
+    owner_email = params.get('owner_email')
+    category = params.get('category')
+
+    cols = ['id', 'title', 'category', 'condition', 'description', 'author_name', 'city', 'contact', 'pickup', 'emoji', 'created_at', 'owner_email']
+
+    if owner_email:
+        cur.execute(
+            "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at, owner_email FROM books WHERE owner_email = %s ORDER BY created_at DESC",
+            (owner_email,)
+        )
+    elif category and category != 'Все':
         cur.execute(
             "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at, owner_email FROM books WHERE is_given = FALSE AND category = %s ORDER BY created_at DESC",
             (category,)
@@ -56,7 +83,6 @@ def handler(event: dict, context) -> dict:
             "SELECT id, title, category, condition, description, author_name, city, contact, pickup, emoji, created_at, owner_email FROM books WHERE is_given = FALSE ORDER BY created_at DESC"
         )
 
-    cols = ['id', 'title', 'category', 'condition', 'description', 'author_name', 'city', 'contact', 'pickup', 'emoji', 'created_at', 'owner_email']
     books = [dict(zip(cols, row)) for row in cur.fetchall()]
     for b in books:
         b['created_at'] = str(b['created_at'])

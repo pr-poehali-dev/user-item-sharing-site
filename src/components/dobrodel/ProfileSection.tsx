@@ -3,8 +3,10 @@ import { BookRequest, Item, Section } from "@/components/dobrodel/types";
 import ItemCard from "@/components/dobrodel/ItemCard";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/components/dobrodel/AuthContext";
+import func2url from "@/../func2url.json";
 
 const REQUESTS_URL = "https://functions.poehali.dev/cbb98ecc-463c-43c3-b6a9-e85a6decfc07";
+const BOOKS_URL = (func2url as Record<string, string>)["books"];
 
 type ProfileTab = "menu" | "mybooks" | "messages" | "favorites" | "settings";
 
@@ -14,7 +16,7 @@ interface ProfileSectionProps {
 }
 
 export default function ProfileSection({ setActiveSection, initialTab = "menu" }: ProfileSectionProps) {
-  const { user, openAuth, logout, myBooks, favorites } = useAuth();
+  const { user, openAuth, logout, myBooks, favorites, removeMyBook } = useAuth();
   const [profileTab, setProfileTab] = useState<ProfileTab>(initialTab);
   const [notifications, setNotifications] = useState<BookRequest[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -172,7 +174,21 @@ export default function ProfileSection({ setActiveSection, initialTab = "menu" }
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               {myBooks.map((book: Item, i: number) => (
-                <ItemCard key={book.id} item={book} delay={i * 0.05} />
+                <div key={book.id} className="relative group">
+                  <ItemCard item={book} delay={i * 0.05} />
+                  <button
+                    onClick={() => {
+                      if (!user) return;
+                      fetch(`${BOOKS_URL}?id=${book.id}&owner_email=${encodeURIComponent(user.email)}`, { method: "DELETE" })
+                        .then(() => removeMyBook(book.id))
+                        .catch(() => {});
+                    }}
+                    className="absolute top-3 right-3 z-10 bg-white border border-red-200 text-red-500 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 shadow-sm"
+                    title="Удалить объявление"
+                  >
+                    <Icon name="Trash2" size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

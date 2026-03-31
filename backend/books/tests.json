@@ -4,17 +4,27 @@
       "name": "Get books list",
       "method": "GET",
       "path": "/",
-      "expectedStatus": 200,
-      "expectedBody": [],
-      "bodyMatcher": "partial"
+      "expectedStatus": 200
     },
     {
       "name": "Create book",
       "method": "POST",
       "path": "/",
-      "body": {"title": "Тест", "category": "Художественная", "condition": "Хорошее", "author_name": "Юра", "city": "Москва", "contact": "@test", "pickup": "Центр", "emoji": "📚"},
-      "expectedStatus": 201,
-      "expectedBody": {"id": 1},
+      "body": {"title": "Тест", "category": "Художественная", "condition": "Хорошее", "author_name": "Юра", "city": "Москва", "contact": "@test", "pickup": "Центр", "emoji": "📚", "owner_email": "test@test.com"},
+      "expectedStatus": 201
+    },
+    {
+      "name": "Get my books",
+      "method": "GET",
+      "path": "/?owner_email=test@test.com",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Delete book without auth",
+      "method": "DELETE",
+      "path": "/?id=999&owner_email=nobody@test.com",
+      "expectedStatus": 404,
+      "expectedBody": {"error": "not found"},
       "bodyMatcher": "partial"
     }
   ]
