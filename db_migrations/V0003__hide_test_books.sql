@@ -1,0 +1,1 @@
+UPDATE books SET is_given = TRUE WHERE title = 'Тест' AND owner_email IN ('test@test.com', '');
