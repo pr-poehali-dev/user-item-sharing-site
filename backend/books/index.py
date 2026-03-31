@@ -36,8 +36,8 @@ def handler(event: dict, context) -> dict:
     if event.get('httpMethod') == 'POST':
         body = json.loads(event.get('body') or '{}')
         cur.execute(
-            """INSERT INTO books (title, category, condition, description, author_name, city, contact, pickup, emoji, owner_email)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, created_at""",
+            """INSERT INTO books (title, category, condition, description, author_name, city, contact, pickup, emoji, owner_email, image)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, created_at""",
             (
                 body.get('title', ''),
                 body.get('category', 'Художественная'),
@@ -49,6 +49,7 @@ def handler(event: dict, context) -> dict:
                 body.get('pickup', ''),
                 body.get('emoji', '📚'),
                 body.get('owner_email', ''),
+                body.get('image'),
             )
         )
         row = cur.fetchone()

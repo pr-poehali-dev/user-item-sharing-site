@@ -17,7 +17,7 @@ function dbBookToItem(b: Record<string, string | number>): Item {
     description: String(b.description || ""),
     author: String(b.author_name || ""),
     city: String(b.city || ""),
-    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
+    image: String(b.image || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop"),
     emoji: String(b.emoji || "📚"),
     contact: String(b.contact || ""),
     pickup: String(b.pickup || ""),
