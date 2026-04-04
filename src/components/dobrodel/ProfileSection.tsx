@@ -7,6 +7,7 @@ import func2url from "@/../backend/func2url.json";
 
 const REQUESTS_URL = "https://functions.poehali.dev/cbb98ecc-463c-43c3-b6a9-e85a6decfc07";
 const BOOKS_URL = (func2url as Record<string, string>)["books"];
+const AUTH_URL = (func2url as Record<string, string>)["auth"];
 
 type ProfileTab = "menu" | "mybooks" | "messages" | "favorites" | "settings";
 
@@ -16,7 +17,7 @@ interface ProfileSectionProps {
 }
 
 export default function ProfileSection({ setActiveSection, initialTab = "menu" }: ProfileSectionProps) {
-  const { user, openAuth, logout, myBooks, favorites, removeMyBook } = useAuth();
+  const { user, openAuth, logout, updateProfile, myBooks, favorites, removeMyBook } = useAuth();
   const [profileTab, setProfileTab] = useState<ProfileTab>(initialTab);
   const [notifications, setNotifications] = useState<BookRequest[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -283,69 +284,162 @@ export default function ProfileSection({ setActiveSection, initialTab = "menu" }
       )}
 
       {profileTab === "settings" && (
-        <>
-          <div className="flex items-center gap-3 mb-6">
-            <button
-              onClick={() => setProfileTab("menu")}
-              className="p-2 rounded-full hover:bg-muted transition-colors"
-            >
-              <Icon name="ArrowLeft" size={20} className="text-foreground" />
-            </button>
-            <div>
-              <h1 className="font-display text-3xl font-bold text-foreground">Настройки</h1>
-              <p className="text-muted-foreground text-sm">Управление аккаунтом</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-border p-6 mb-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
-                📚
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">{user?.name}</p>
-                <p className="text-sm text-muted-foreground">{user?.email}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm mb-4">
-            <div className="px-5 py-3 border-b border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Аккаунт</p>
-            </div>
-            <div className="px-5 py-4 flex items-center justify-between border-b border-border">
-              <div className="flex items-center gap-3">
-                <Icon name="User" size={18} className="text-muted-foreground" />
-                <span className="text-sm text-foreground">Имя</span>
-              </div>
-              <span className="text-sm text-muted-foreground">{user?.name}</span>
-            </div>
-            <div className="px-5 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Icon name="Mail" size={18} className="text-muted-foreground" />
-                <span className="text-sm text-foreground">Email</span>
-              </div>
-              <span className="text-sm text-muted-foreground">{user?.email}</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
-            <div className="px-5 py-3 border-b border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Другое</p>
-            </div>
-            <button
-              onClick={() => {
-                logout();
-                setActiveSection("home");
-              }}
-              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-red-50 transition-colors text-left"
-            >
-              <Icon name="LogOut" size={18} className="text-red-500" />
-              <span className="text-sm font-medium text-red-500">Выйти из аккаунта</span>
-            </button>
-          </div>
-        </>
+        <SettingsTab
+          user={user}
+          onBack={() => setProfileTab("menu")}
+          onLogout={() => { logout(); setActiveSection("home"); }}
+          updateProfile={updateProfile}
+        />
       )}
     </div>
+  );
+}
+
+interface SettingsTabProps {
+  user: { name: string; email: string } | null;
+  onBack: () => void;
+  onLogout: () => void;
+  updateProfile: (name: string) => void;
+}
+
+function SettingsTab({ user, onBack, onLogout, updateProfile }: SettingsTabProps) {
+  const [newName, setNewName] = useState(user?.name || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(""); setSuccess("");
+
+    if (!currentPassword) { setError("Введите текущий пароль для подтверждения"); return; }
+    if (newPassword && newPassword.length < 6) { setError("Новый пароль должен быть не менее 6 символов"); return; }
+    if (newPassword && newPassword !== confirmNewPassword) { setError("Новые пароли не совпадают"); return; }
+    if (!newName.trim() && !newPassword) { setError("Измените имя или введите новый пароль"); return; }
+
+    setSaving(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          email: user?.email,
+          current_password: currentPassword,
+          new_name: newName.trim() !== user?.name ? newName.trim() : "",
+          new_password: newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Что-то пошло не так"); return; }
+      updateProfile(data.name);
+      setCurrentPassword(""); setNewPassword(""); setConfirmNewPassword("");
+      setSuccess("Изменения сохранены!");
+    } catch {
+      setError("Ошибка соединения. Попробуйте ещё раз");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="p-2 rounded-full hover:bg-muted transition-colors">
+          <Icon name="ArrowLeft" size={20} className="text-foreground" />
+        </button>
+        <div>
+          <h1 className="font-display text-3xl font-bold text-foreground">Настройки</h1>
+          <p className="text-muted-foreground text-sm">Редактирование профиля</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-border p-6 mb-4 shadow-sm">
+        <div className="flex items-center gap-4 mb-5">
+          <div className="w-14 h-14 bg-gradient-to-br from-orange-200 to-amber-300 rounded-full flex items-center justify-center text-3xl flex-shrink-0">
+            📚
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">{user?.name}</p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Имя</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Смена пароля</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Новый пароль</label>
+                <input
+                  type="password"
+                  placeholder="Оставьте пустым, чтобы не менять"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              {newPassword && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Повторите новый пароль</label>
+                  <input
+                    type="password"
+                    placeholder="Повторите новый пароль"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <label className="block text-sm font-medium mb-1.5">Текущий пароль *</label>
+            <input
+              type="password"
+              placeholder="Для подтверждения изменений"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+
+          {error && <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          {success && <p className="text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">{success}</p>}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {saving ? "Сохраняю..." : "Сохранить изменения"}
+          </button>
+        </form>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-red-50 transition-colors text-left"
+        >
+          <Icon name="LogOut" size={18} className="text-red-500" />
+          <span className="text-sm font-medium text-red-500">Выйти из аккаунта</span>
+        </button>
+      </div>
+    </>
   );
 }

@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   login: (name: string, email: string) => void;
   logout: () => void;
+  updateProfile: (name: string) => void;
   showAuthModal: boolean;
   openAuth: () => void;
   closeAuth: () => void;
@@ -87,6 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMyBooks([]);
   };
 
+  const updateProfile = (name: string) => {
+    if (!user) return;
+    const u = { ...user, name };
+    setUser(u);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+  };
+
   const openAuth = () => setShowAuthModal(true);
   const closeAuth = () => setShowAuthModal(false);
   const addMyBook = (book: Item) => setMyBooks((prev) => [book, ...prev]);
@@ -103,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isFavorite = (id: number) => favorites.some((f) => f.id === id);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, showAuthModal, openAuth, closeAuth, myBooks, addMyBook, removeMyBook, loadMyBooks, favorites, toggleFavorite, isFavorite }}>
+    <AuthContext.Provider value={{ user, login, logout, updateProfile, showAuthModal, openAuth, closeAuth, myBooks, addMyBook, removeMyBook, loadMyBooks, favorites, toggleFavorite, isFavorite }}>
       {children}
     </AuthContext.Provider>
   );
