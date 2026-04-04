@@ -1,6 +1,9 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "./AuthContext";
+import func2url from "@/../backend/func2url.json";
+
+const AUTH_URL = (func2url as Record<string, string>)["auth"];
 
 export default function AuthModal() {
   const { showAuthModal, closeAuth, login } = useAuth();
@@ -8,28 +11,47 @@ export default function AuthModal() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!showAuthModal) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
-      setError("Заполните все обязательные поля");
-      return;
-    }
-    if (mode === "register" && !name) {
-      setError("Введите ваше имя");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Пароль должен быть не менее 6 символов");
-      return;
+    if (!email || !password) { setError("Заполните все обязательные поля"); return; }
+    if (mode === "register" && !name) { setError("Введите ваше имя"); return; }
+    if (password.length < 6) { setError("Пароль должен быть не менее 6 символов"); return; }
+    if (mode === "register" && password !== confirmPassword) {
+      setError("Пароли не совпадают"); return;
     }
 
-    login(mode === "register" ? name : email.split("@")[0], email);
+    setLoading(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: mode, email, password, name }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Что-то пошло не так");
+        return;
+      }
+      login(data.name, data.email);
+    } catch {
+      setError("Ошибка соединения. Попробуйте ещё раз");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = (m: "login" | "register") => {
+    setMode(m);
+    setError("");
+    setConfirmPassword("");
   };
 
   return (
@@ -48,7 +70,9 @@ export default function AuthModal() {
               {mode === "register" ? "Регистрация" : "Вход"}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {mode === "register" ? "Создайте аккаунт, чтобы отдавать и получать книги" : "Войдите в свой аккаунт"}
+              {mode === "register"
+                ? "Создайте аккаунт, чтобы отдавать и получать книги"
+                : "Войдите в свой аккаунт"}
             </p>
           </div>
           <button onClick={closeAuth} className="text-muted-foreground hover:text-foreground p-1">
@@ -89,6 +113,18 @@ export default function AuthModal() {
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
+          {mode === "register" && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Повторите пароль *</label>
+              <input
+                type="password"
+                placeholder="Введите пароль ещё раз"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          )}
 
           {error && (
             <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
@@ -96,9 +132,12 @@ export default function AuthModal() {
 
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground py-3 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-md mt-1"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-full font-semibold text-sm hover:opacity-90 transition-all shadow-md mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {mode === "register" ? "Зарегистрироваться" : "Войти"}
+            {loading
+              ? (mode === "register" ? "Регистрируюсь..." : "Вхожу...")
+              : (mode === "register" ? "Зарегистрироваться" : "Войти")}
           </button>
         </form>
 
@@ -106,14 +145,14 @@ export default function AuthModal() {
           {mode === "register" ? (
             <p className="text-xs text-muted-foreground">
               Уже есть аккаунт?{" "}
-              <button onClick={() => { setMode("login"); setError(""); }} className="text-primary font-medium hover:underline">
+              <button onClick={() => switchMode("login")} className="text-primary font-medium hover:underline">
                 Войти
               </button>
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
               Нет аккаунта?{" "}
-              <button onClick={() => { setMode("register"); setError(""); }} className="text-primary font-medium hover:underline">
+              <button onClick={() => switchMode("register")} className="text-primary font-medium hover:underline">
                 Зарегистрироваться
               </button>
             </p>
