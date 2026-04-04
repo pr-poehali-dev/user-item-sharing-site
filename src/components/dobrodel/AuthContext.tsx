@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Item } from "./types";
 import func2url from "@/../backend/func2url.json";
 
 const BOOKS_URL = (func2url as Record<string, string>)["books"];
+const SESSION_KEY = "dobrodel_user";
 
 interface User {
   name: string;
@@ -28,7 +29,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [myBooks, setMyBooks] = useState<Item[]>([]);
   const [favorites, setFavorites] = useState<Item[]>([]);
@@ -59,14 +67,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {});
   };
 
+  useEffect(() => {
+    if (user) {
+      loadMyBooks(user.email);
+    }
+  }, []);
+
   const login = (name: string, email: string) => {
-    setUser({ name, email });
+    const u = { name, email };
+    setUser(u);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(u));
     setShowAuthModal(false);
     loadMyBooks(email);
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem(SESSION_KEY);
     setMyBooks([]);
   };
 
