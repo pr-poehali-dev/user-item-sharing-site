@@ -40,7 +40,7 @@ export default function AuthModal() {
         setError(data.error || "Что-то пошло не так");
         return;
       }
-      login(data.name, data.email);
+      login(data.name, data.email, data.role);
     } catch {
       setError("Ошибка соединения. Попробуйте ещё раз");
     } finally {

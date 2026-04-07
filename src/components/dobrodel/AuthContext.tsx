@@ -8,11 +8,13 @@ const SESSION_KEY = "dobrodel_user";
 interface User {
   name: string;
   email: string;
+  role: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (name: string, email: string) => void;
+  isModerator: boolean;
+  login: (name: string, email: string, role?: string) => void;
   logout: () => void;
   updateProfile: (name: string) => void;
   showAuthModal: boolean;
@@ -41,6 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [myBooks, setMyBooks] = useState<Item[]>([]);
   const [favorites, setFavorites] = useState<Item[]>([]);
+
+  const isModerator = user?.role === "moderator";
 
   const loadMyBooks = (email: string) => {
     fetch(`${BOOKS_URL}?owner_email=${encodeURIComponent(email)}`)
@@ -74,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (name: string, email: string) => {
-    const u = { name, email };
+  const login = (name: string, email: string, role?: string) => {
+    const u = { name, email, role: role || "user" };
     setUser(u);
     localStorage.setItem(SESSION_KEY, JSON.stringify(u));
     setShowAuthModal(false);
@@ -111,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isFavorite = (id: number) => favorites.some((f) => f.id === id);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateProfile, showAuthModal, openAuth, closeAuth, myBooks, addMyBook, removeMyBook, loadMyBooks, favorites, toggleFavorite, isFavorite }}>
+    <AuthContext.Provider value={{ user, isModerator, login, logout, updateProfile, showAuthModal, openAuth, closeAuth, myBooks, addMyBook, removeMyBook, loadMyBooks, favorites, toggleFavorite, isFavorite }}>
       {children}
     </AuthContext.Provider>
   );

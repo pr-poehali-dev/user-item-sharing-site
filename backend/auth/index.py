@@ -9,6 +9,8 @@ CORS = {
     'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+MODERATOR_EMAILS = ['tomilinmita@gmail.com']
+
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -94,20 +96,21 @@ def handler(event: dict, context) -> dict:
                     'body': json.dumps({'error': 'Пользователь с таким email уже существует'})}
 
         pw_hash = hash_password(password)
+        role = 'moderator' if email in MODERATOR_EMAILS else 'user'
         cur.execute(
-            "INSERT INTO users (name, email, password_hash) VALUES (%s, %s, %s) RETURNING id, name, email",
-            (name, email, pw_hash)
+            "INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s) RETURNING id, name, email, role",
+            (name, email, pw_hash, role)
         )
         row = cur.fetchone()
         conn.commit()
         cur.close(); conn.close()
         return {'statusCode': 201, 'headers': {**CORS, 'Content-Type': 'application/json'},
-                'body': json.dumps({'ok': True, 'id': row[0], 'name': row[1], 'email': row[2]})}
+                'body': json.dumps({'ok': True, 'id': row[0], 'name': row[1], 'email': row[2], 'role': row[3]})}
 
     elif action == 'login':
         pw_hash = hash_password(password)
         cur.execute(
-            "SELECT id, name, email FROM users WHERE email = %s AND password_hash = %s",
+            "SELECT id, name, email, role FROM users WHERE email = %s AND password_hash = %s",
             (email, pw_hash)
         )
         row = cur.fetchone()
@@ -116,7 +119,7 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 401, 'headers': {**CORS, 'Content-Type': 'application/json'},
                     'body': json.dumps({'error': 'Неверный email или пароль'})}
         return {'statusCode': 200, 'headers': {**CORS, 'Content-Type': 'application/json'},
-                'body': json.dumps({'ok': True, 'id': row[0], 'name': row[1], 'email': row[2]})}
+                'body': json.dumps({'ok': True, 'id': row[0], 'name': row[1], 'email': row[2], 'role': row[3]})}
 
     cur.close(); conn.close()
     return {'statusCode': 400, 'headers': {**CORS, 'Content-Type': 'application/json'},

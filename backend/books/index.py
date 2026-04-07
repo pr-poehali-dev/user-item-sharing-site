@@ -20,15 +20,26 @@ def handler(event: dict, context) -> dict:
         params = event.get('queryStringParameters') or {}
         book_id = params.get('id')
         owner_email = params.get('owner_email')
-        if not book_id or not owner_email:
-            cur.close()
-            conn.close()
-            return {'statusCode': 400, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'id and owner_email required'})}
-        cur.execute("DELETE FROM books WHERE id = %s AND owner_email = %s RETURNING id", (book_id, owner_email))
+        moderator_email = params.get('moderator_email')
+        if not book_id:
+            cur.close(); conn.close()
+            return {'statusCode': 400, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'id required'})}
+        if moderator_email:
+            cur.execute("SELECT role FROM users WHERE email = %s", (moderator_email,))
+            role_row = cur.fetchone()
+            if role_row and role_row[0] == 'moderator':
+                cur.execute("DELETE FROM books WHERE id = %s RETURNING id", (book_id,))
+            else:
+                cur.close(); conn.close()
+                return {'statusCode': 403, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'access denied'})}
+        else:
+            if not owner_email:
+                cur.close(); conn.close()
+                return {'statusCode': 400, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'owner_email required'})}
+            cur.execute("DELETE FROM books WHERE id = %s AND owner_email = %s RETURNING id", (book_id, owner_email))
         deleted = cur.fetchone()
         conn.commit()
-        cur.close()
-        conn.close()
+        cur.close(); conn.close()
         if deleted:
             return {'statusCode': 200, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'deleted': deleted[0]})}
         return {'statusCode': 404, 'headers': {**CORS, 'Content-Type': 'application/json'}, 'body': json.dumps({'error': 'not found'})}

@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { CATEGORIES, Item } from "@/components/dobrodel/types";
 import ItemCard from "@/components/dobrodel/ItemCard";
 import Icon from "@/components/ui/icon";
+import { useAuth } from "@/components/dobrodel/AuthContext";
+import func2url from "@/../backend/func2url.json";
 
-const BOOKS_URL = "https://functions.poehali.dev/b3760fda-9d1b-466c-be33-dae1c5039801";
+const BOOKS_URL = (func2url as Record<string, string>)["books"];
 
 function dbBookToItem(b: Record<string, string | number>): Item {
   return {
@@ -24,9 +26,11 @@ function dbBookToItem(b: Record<string, string | number>): Item {
 }
 
 export default function CatalogSection() {
+  const { user, isModerator } = useAuth();
   const [activeCategory, setActiveCategory] = useState("Все");
   const [books, setBooks] = useState<Item[]>([]);
   const [loadingBooks, setLoadingBooks] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchBooks = useCallback(() => {
     setLoadingBooks(true);
@@ -44,10 +48,30 @@ export default function CatalogSection() {
     fetchBooks();
   }, [fetchBooks]);
 
+  const handleModeratorDelete = async (bookId: number) => {
+    if (!user || !isModerator) return;
+    if (!confirm("Удалить это объявление?")) return;
+    setDeletingId(bookId);
+    try {
+      const res = await fetch(`${BOOKS_URL}?id=${bookId}&moderator_email=${encodeURIComponent(user.email)}`, { method: "DELETE" });
+      if (res.ok) {
+        setBooks((prev) => prev.filter((b) => b.id !== bookId));
+      }
+    } catch { /* network error */ }
+    setDeletingId(null);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="font-display text-4xl font-bold text-foreground mb-1">Каталог книг</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-4xl font-bold text-foreground mb-1">Каталог книг</h1>
+          {isModerator && (
+            <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+              Модератор
+            </span>
+          )}
+        </div>
         <p className="text-muted-foreground text-sm">Всё бесплатно. Просто напишите владельцу</p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -83,7 +107,19 @@ export default function CatalogSection() {
       ) : books.length > 0 ? (
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
           {books.map((item, i) => (
-            <ItemCard key={item.id} item={item} delay={i * 0.05} />
+            <div key={item.id} className="relative group">
+              <ItemCard item={item} delay={i * 0.05} />
+              {isModerator && (
+                <button
+                  onClick={() => handleModeratorDelete(item.id)}
+                  disabled={deletingId === item.id}
+                  className="absolute top-3 right-3 z-10 bg-white border border-red-200 text-red-500 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 shadow-sm disabled:opacity-50"
+                  title="Удалить объявление (модератор)"
+                >
+                  <Icon name="Trash2" size={14} />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       ) : (
