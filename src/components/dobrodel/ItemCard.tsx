@@ -55,12 +55,18 @@ export default function ItemCard({ item, delay = 0 }: ItemCardProps) {
         style={{ animationDelay: `${delay}s` }}
       >
         <div className="relative h-44 overflow-hidden bg-muted">
-          <img
-            src={item.image}
-            alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <span className="absolute top-2 right-2 text-2xl">{item.emoji}</span>
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-7xl">{item.emoji}</span>
+            </div>
+          )}
+          {item.image && <span className="absolute top-2 right-2 text-2xl">{item.emoji}</span>}
           <span className="absolute top-2 left-2 bg-white/90 backdrop-blur text-xs font-medium px-2 py-1 rounded-full text-foreground">
             {item.category}
           </span>
